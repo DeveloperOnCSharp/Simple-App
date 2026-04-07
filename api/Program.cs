@@ -9,6 +9,7 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 builder.Services.AddControllers();
+builder.Services.AddSingleton<ContactStorage>();
 
 var app = builder.Build();
 
