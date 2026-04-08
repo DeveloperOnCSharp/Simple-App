@@ -11,7 +11,7 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 builder.Services.AddControllers();
-builder.Services.AddSingleton<ContactStorage>();
+builder.Services.AddSingleton<IStorage, SqliteStorage>();
 
 builder.Services.AddCors(opt =>
 //Добавляем политику CORS с именем "CorsPolicy" и задаем правила

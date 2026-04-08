@@ -2,11 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 public class ContactManagementController : BaseController
 {
-    // храним ссылку на модель
-    private readonly ContactStorage storage;
+    // переменная для хранения ссылки на модель подключения к БД
+    private readonly IStorage storage;
 
-    // При создании вызываем Conta
-    public ContactManagementController(ContactStorage storage)
+    public ContactManagementController(IStorage storage)
     {
         this.storage = storage;
     }
@@ -47,10 +46,14 @@ public class ContactManagementController : BaseController
     [HttpGet("contacts/{id}")]
     public ActionResult<Contact> FindContactId(int id)
     {
-        if(id <= -1) return BadRequest("Неккоректные данные");
-        Contact contact = storage.FindContactId(id);
-        
-        if(contact is null) return NotFound($"{id} такого контакта нет");
-        return contact;
+        if (id < 1)
+        return BadRequest("ID должно быть положительным числом.");
+
+    Contact contact = storage.FindContactId(id);
+    
+    if (contact is null) 
+        return NotFound($"Контакт с ID {id} не найден.");
+
+    return Ok(contact);
     }
 }
