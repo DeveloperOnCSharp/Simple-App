@@ -1,21 +1,26 @@
-import React, { useState } from "react";
+import axios from 'axios';
+import React, { useState, useEffect } from "react";
 import TableContact from "./layout/TableContact/TableContact";
 import FormContact from "./layout/FormContact/FormContact";
 
+const baseApiUrl = process.env.REACT_APP_API_URL;
+
 const App = () => {
-  const [contacts, setContacts] = useState([
-    { id: 1, name: "Иван Иванов", email: "ivan.ivanov@example.com" },
-    { id: 2, name: "Петр Петров", email: "petr.petrov@example.com" },
-    { id: 152, name: "Сидор Сидоров", email: "sidor.sidorov@example.com" },
-    { id: 4, name: "Мария Смирнова", email: "maria.smirnova@example.com" }
-  ]
-)
+  
+  const [contacts, setContacts] = useState([])
+  const url = `${baseApiUrl}/contacts`;
+  useEffect(()=>{
+    console.log(url);
+  axios.get(url).then(
+    res => setContacts(res.data)
+  );
+  },[url]);
+
   // хуки для обработки ошибок
   const [error, setError] = useState("");
 
   //сортировка массива
   const addContact = (contactName, contactEmail) => {
-    
     //Обработка пустых полей
     if (contactName === "" || contactEmail === "") {
       setError("Имя и email не могут быть пустыми.");
@@ -23,12 +28,11 @@ const App = () => {
     }
     // обнуляем состояние ошибки
     setError("");
-
     // Логика добавления нового контакта
-    let newId = -1;
-    for( let i = 0; i < contacts.length; i++) {
+    let newId = 0;
+    for (let i = 0; i < contacts.length; i++) {
       const elementId = contacts[i].id;
-      if(elementId > newId) {
+      if (elementId > newId) {
         newId = elementId;
       }
     }
@@ -41,10 +45,14 @@ const App = () => {
       name: contactName,
       email: contactEmail
     };
-
+    axios.post(url, item);
     // добавляем новый контакт в массив контактов
     setContacts([...contacts, item]);
-    console.log(contacts);
+  }
+
+  const deleteContact = (id) => {
+    setContacts(contacts.filter(item => item.id !== id));
+    axios.delete(`${url}/${id}`);
   }
 
   return (
@@ -55,7 +63,10 @@ const App = () => {
         </div>
         
         <div className="card-body">
-          <TableContact contacts={contacts} />
+          <TableContact 
+            contacts={contacts}
+            deleteContact={deleteContact}
+          />
           
           {error && (
             <div className="alert alert-danger mt-3">
