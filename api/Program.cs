@@ -1,6 +1,8 @@
 var builder = WebApplication.CreateBuilder(args);
 // Создаем переменную для хранения списка разрешенных доменов
+// Создаем переменную для хранения подключения к базе данных
 var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+var connectionString = builder.Configuration.GetConnectionString("SQLiteConnectionString");
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
@@ -10,9 +12,10 @@ builder.Services.AddSwaggerGen(opt =>
         Title = "Contact API",
     });
 });
-builder.Services.AddControllers();
-builder.Services.AddSingleton<IStorage, SqliteStorage>();
 
+
+builder.Services.AddControllers();
+builder.Services.AddSingleton<IStorage>(new SqliteStorage(connectionString));
 builder.Services.AddCors(opt =>
 //Добавляем политику CORS с именем "CorsPolicy" и задаем правила
 opt.AddPolicy("CorsPolicy", policy =>
@@ -23,8 +26,8 @@ opt.AddPolicy("CorsPolicy", policy =>
 
 }));
 
-var app = builder.Build();
 
+var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("CorsPolicy");

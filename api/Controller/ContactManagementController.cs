@@ -43,17 +43,17 @@ public class ContactManagementController : BaseController
         return Conflict("Контакт с указанным ID не нашелся");
     }
     
-    [HttpGet("contacts/{id}")]
-    public ActionResult<Contact> FindContactId(int id)
-    {
-        if (id < 1)
-        return BadRequest("ID должно быть положительным числом.");
+    // [HttpGet("contacts/{id}")]
+    // public ActionResult<Contact> FindContactId(int id)
+    // {
+    //     if (id < 1)
+    //     return BadRequest("ID должно быть положительным числом.");
 
-    Contact contact = storage.FindContactId(id);
+    // Contact contact = storage.FindContactId(id);
     
-    if (contact is null) 
-        return NotFound($"Контакт с ID {id} не найден.");
+    // if (contact is null) 
+    //     return NotFound($"Контакт с ID {id} не найден.");
 
-    return Ok(contact);
-    }
+    // return Ok(contact);
+    // }
 }
