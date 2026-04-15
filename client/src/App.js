@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 import React, { useState, useEffect } from "react";
 import TableContact from "./layout/TableContact/TableContact";
 import FormContact from "./layout/FormContact/FormContact";
@@ -6,15 +6,12 @@ import FormContact from "./layout/FormContact/FormContact";
 const baseApiUrl = process.env.REACT_APP_API_URL;
 
 const App = () => {
-  
-  const [contacts, setContacts] = useState([])
+  const [contacts, setContacts] = useState([]);
   const url = `${baseApiUrl}/contacts`;
-  useEffect(()=>{
+  useEffect(() => {
     console.log(url);
-  axios.get(url).then(
-    res => setContacts(res.data)
-  );
-  },[url]);
+    axios.get(url).then((res) => setContacts(res.data));
+  }, [url]);
 
   // хуки для обработки ошибок
   const [error, setError] = useState("");
@@ -28,32 +25,18 @@ const App = () => {
     }
     // обнуляем состояние ошибки
     setError("");
-    // Логика добавления нового контакта
-    let newId = 0;
-    for (let i = 0; i < contacts.length; i++) {
-      const elementId = contacts[i].id;
-      if (elementId > newId) {
-        newId = elementId;
-      }
-    }
-    // увеличиваем id на единицу
-    newId++;
 
     // создаем новый контакт, передаем в качестве параметров имя и email
     const item = {
-      id: newId,
       name: contactName,
-      email: contactEmail
+      email: contactEmail,
     };
-    axios.post(url, item);
-    // добавляем новый контакт в массив контактов
-    setContacts([...contacts, item]);
-  }
-
+    axios.post(url, item).then((res) => setContacts([...contacts, res.data]));
+  };
   const deleteContact = (id) => {
-    setContacts(contacts.filter(item => item.id !== id));
+    setContacts(contacts.filter((item) => item.id !== id));
     axios.delete(`${url}/${id}`);
-  }
+  };
 
   return (
     <div className="container mt-5">
@@ -61,24 +44,17 @@ const App = () => {
         <div className="card-header">
           <h1>Список контактов</h1>
         </div>
-        
-        <div className="card-body">
-          <TableContact 
-            contacts={contacts}
-            deleteContact={deleteContact}
-          />
-          
-          {error && (
-            <div className="alert alert-danger mt-3">
-              {error}
-            </div>
-          )}
 
-          <FormContact addContact={addContact}/>
+        <div className="card-body">
+          <TableContact contacts={contacts} deleteContact={deleteContact} />
+
+          {error && <div className="alert alert-danger mt-3">{error}</div>}
+
+          <FormContact addContact={addContact} />
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default App;

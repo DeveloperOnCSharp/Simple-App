@@ -1,84 +1,91 @@
 using Microsoft.Data.Sqlite;
+namespace contact_app.storage;
 
-public class SqliteStorage : IStorage
+public class SqliteStorage(string connectionString) : IStorage
 {
-    private string connectionString = "Data Source=contact.db";
-
-    public SqliteStorage(string connectionString)
-    {
-        this.connectionString = connectionString;
-    }
-
-    public bool Add(Contact contact)
-    {
-        //Создаем соединение к БД, используем using для автоматического закрытия соединения
-        using var connection = new SqliteConnection(connectionString);
-        //Открываем соединение
-        connection.Open();
-
-        //Создаем команду для выполнения SQL
-        var command = connection.CreateCommand();
-
-        string sql = "INSERT INTO contacts(name, email) VALUES (@name,@email);";      
-        command.CommandText = sql;
-
-        // Добавляем параметры для запроса и снимаем с себя ответственность за расставление кавычек в запросе
-        command.Parameters.AddWithValue("@name", contact.Name);
-        command.Parameters.AddWithValue("@email", contact.Email);
-
-        return command.ExecuteNonQuery() > 0;
-    }
+    private readonly string connectionString = connectionString;
 
     public List<Contact> GetContacts()
     {
-        var contact = new List<Contact>();
+        const string sql = "SELECT * FROM contacts;";
 
-        using var connection = new SqliteConnection(connectionString);
-        connection.Open();
-
-        var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM contacts;";
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
+        return ExecuteQuerry(sql, cmd =>
         {
-            contact.Add(new Contact()
+            var contacts = new List<Contact>();
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-               Id = reader.GetInt32(0),
-               Name = reader.GetString(1),
-               Email = reader.GetString(2), 
-            });
-        }
+                contacts.Add(new Contact
+                {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    Email = reader.GetString(2)
+                });
+            }
+            return contacts;
+        });
+    }
 
+    public Contact Add(Contact contact)
+    {
+        const string sql = @"INSERT INTO contacts(name, email) VALUES (@name, @email);
+            SELECT last_insert_rowid();";
 
+        var parameters = new Dictionary<string, object>
+        {
+            { "@name", contact.Name },
+            { "@email", contact.Email }
+        };
+
+        int newId = ExecuteQuerry(sql, cmd => Convert.ToInt32(cmd.ExecuteScalar()), parameters);
+        contact.Id = newId;
         return contact;
     }
 
     public bool Remove(int id)
     {
-        using var connection = new SqliteConnection(connectionString);
-        //DELETE FROM contacts WHERE id = 1;
-        var command = connection.CreateCommand();
-        connection.Open();
-        
-        string sql = "DELETE FROM contacts WHERE id = @id;";
-        command.CommandText = sql;
-        command.Parameters.AddWithValue("@id", id);
-
-        return command.ExecuteNonQuery() > 0;
+        const string sql = "DELETE FROM contacts WHERE id = @id;";
+        var parameters = new Dictionary<string, object>
+        {
+            { "@id", id }
+        };
+        return ExecuteQuerry(sql, cmd => cmd.ExecuteNonQuery() > 0, parameters);
     }
 
     public bool UpdateContact(ContactDto contactDto, int id)
     {
-        using var connection = new SqliteConnection(connectionString);
-        var command = connection.CreateCommand();
+        const string sql = "UPDATE contacts SET name = @name, email = @email WHERE id = @id;";
+        var parameters = new Dictionary<string, object>
+        {
+            { "@name", contactDto.Name },
+            { "@email", contactDto.Email },
+            { "@id", id }
+        };
+        return ExecuteQuerry(sql, cmd => cmd.ExecuteNonQuery() > 0, parameters);
+    }
+    private SqliteConnection CreateAndOpenConnection()
+    {
+        var connection = new SqliteConnection(connectionString);
         connection.Open();
-
-        string sql = "UPDATE contacts SET name = @name, email = @email WHERE id = @id;";
+        return connection;
+    }
+    private T ExecuteQuerry<T>(
+        string sql,
+        Func<SqliteCommand, T> action,
+        Dictionary<string, object> parameters = null)
+    {
+        using var connection = CreateAndOpenConnection();
+        using var command = connection.CreateCommand();
         command.CommandText = sql;
-        command.Parameters.AddWithValue("@name", contactDto.Name);
-        command.Parameters.AddWithValue("@email", contactDto.Email);
-        command.Parameters.AddWithValue("@id", id);
 
-        return command.ExecuteNonQuery() > 0;
+        if (parameters != null)
+        {
+            foreach (var param in parameters)
+            {
+                command.Parameters.AddWithValue(param.Key, param.Value);
+            }
+        }
+
+        return action(command);
     }
 }

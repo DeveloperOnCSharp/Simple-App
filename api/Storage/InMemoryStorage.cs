@@ -1,12 +1,12 @@
 
 public class InMemoryStorage : IStorage
 {
-    private List<Contact> Contacts {get;set;}
+    private List<Contact> Contacts { get; set; }
     public InMemoryStorage()
     {
         this.Contacts = new List<Contact>();
 
-        for(int i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++)
         {
             this.Contacts.Add(new Contact()
             {
@@ -20,24 +20,24 @@ public class InMemoryStorage : IStorage
     {
         return Contacts;
     }
-    public bool Add(Contact contact)
+    public Contact Add(Contact contact)
     {
         foreach (var item in Contacts)
         {
-            if(contact.Id == item.Id)
+            if (contact.Id == item.Id)
             {
-                return false;
+                return null;
             }
         }
         Contacts.Add(contact);
-        return true;
+        return contact;
     }
     public bool Remove(int id)
     {
         Contact contact;
-        for(int i = 0; i < Contacts.Count; i++)
+        for (int i = 0; i < Contacts.Count; i++)
         {
-            if(this.Contacts[i].Id  == id)
+            if (this.Contacts[i].Id == id)
             {
                 contact = this.Contacts[i];
                 Contacts.Remove(contact);
@@ -49,14 +49,14 @@ public class InMemoryStorage : IStorage
     public bool UpdateContact(ContactDto contactDto, int id)
     {
         Contact contact;
-        for(int i = 0; i < Contacts.Count; i++)
+        for (int i = 0; i < Contacts.Count; i++)
         {
-            if(Contacts[i].Id == id)
+            if (Contacts[i].Id == id)
             {
                 contact = Contacts[i];
-                if(!String.IsNullOrEmpty(contactDto.Email))
+                if (!String.IsNullOrEmpty(contactDto.Email))
                     contact.Email = contactDto.Email;
-                if(!String.IsNullOrEmpty(contactDto.Name))
+                if (!String.IsNullOrEmpty(contactDto.Name))
                     contact.Name = contactDto.Name;
                 return true;
             }
@@ -67,7 +67,7 @@ public class InMemoryStorage : IStorage
     {
         foreach (var item in Contacts)
         {
-            if(item.Id == id) return item;
+            if (item.Id == id) return item;
         }
         return null;
     }
