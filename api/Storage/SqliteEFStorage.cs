@@ -4,7 +4,7 @@ namespace contact_app.storage;
 
 public class SqliteEFStorage : IStorage
 {
-    private SqliteDbContext context;
+    protected SqliteDbContext context;
 
     public SqliteEFStorage(SqliteDbContext context)
     {
@@ -38,4 +38,5 @@ public class SqliteEFStorage : IStorage
         context.SaveChanges();
         return true;
     }
+
 }

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-public class ContactManagementController(IStorage storage) : BaseController
+public class ContactManagementController(IPaginationStorage storage) : BaseController
 {
     // переменная для хранения ссылки на модель подключения к БД
-    private readonly IStorage storage = storage;
+    private readonly IPaginationStorage storage = storage;
 
 
     [HttpPost("contacts")]
@@ -23,6 +23,17 @@ public class ContactManagementController(IStorage storage) : BaseController
         return Ok(storage.GetContacts());
     }
 
+    [HttpGet("contacts/{id}")]
+    public ActionResult<Contact> FindContactId(int id)
+    {
+        Contact contact = storage.GetContactById(id);
+        if (contact == null)
+        {
+            return NotFound();
+        }
+        return Ok(contact);
+    }
+
     [HttpDelete("contacts/{id}")]
     public IActionResult DeleteContact(int id)
     {
@@ -37,6 +48,20 @@ public class ContactManagementController(IStorage storage) : BaseController
         bool res = storage.UpdateContact(contactDto, id);
         if (res) return Ok();
         return Conflict("Контакт с указанным ID не нашелся");
+    }
+
+    [HttpGet("contacts/page")]
+    public ActionResult<List<Contact>> GetContacts(int pageNumber = 1, int pageSize = 10)
+    {
+        var (contacts, totalCount) = storage.GetContacts(pageNumber, pageSize);
+        var response = new
+        {
+            contacts,
+            totalCount,
+            CurrentPage = pageNumber,
+            PageSize = pageSize,
+        };
+        return Ok(response);
     }
 
     // [HttpGet("contacts/{id}")]
